@@ -45,6 +45,7 @@ const httpRequestListener = (request, response) => {
 
     request.on("end", () => {
       const user = JSON.parse(body);
+      // 가자
 
       users.push({ // (8)
         id: user.id,
