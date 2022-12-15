@@ -1,9 +1,10 @@
 // node.js에 내장되어 있는 http라고 하는 built-in 모듈을 호출
 // http 객체 안에 내장되어 있는 cerateServer 함수를 사용해서 서버 객체를 생성
+const { appendFile } = require("fs");
 const http = require("http");
 const server = http.createServer();
 
-
+// =============== 유저 정보 ================
 const users = [
   {
     id: 1,
@@ -19,6 +20,7 @@ const users = [
   },
 ]
 
+// =============== 게시글 목록 ================
 const posts = [
   {
     id: 1,
@@ -34,56 +36,130 @@ const posts = [
   }
 ]
 
-// ====================== api ===========================
+// =============== 게시글 목록 조회하기 함수 ================
+function getPostsList(users, posts) {
+  const info = [];
+
+  users.forEach((element) => {
+    const obj = {};
+    obj["userID"] = element.id;
+    obj["userName"] = element.name
+
+    for(let i in posts) {
+      if(element.id === posts[i].id) {
+        obj["postingId"] = posts[i].id;
+        obj["postingTitle"] = posts[i].title;
+        obj["postingContent"] = posts[i].content;
+      };
+    };
+    info.push(obj)
+  });
+  return info
+};
+
+
+// =============== 게시글 목록 조회하기 함수 ================
+
+
+
 const httpRequestListener = (request, response) => {
   const {url, method} = request;
 
-  // ====================== 회원가입 api  ===========================
-  if(url === "/user/signup" && method === "POST") {
-    let body = "";
+  // =============== 유저와 게시글 목록 조회하기 ================
+  if (method === "GET") {
+    if (url === "/posts") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ data: posts }));
+    } else if (url === "/postings") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ data: getPostsList(users, posts) }));
+    }
+  } 
+// =============== 유저 회원가입 ================
+  if(method === "POST") {
+    if(url === "/user/signup"){
+      let body = "";
+      request.on("data", (data) => {body += data})
+      request.on("end", () => {
 
-    request.on("data", (data) => {body += data})
-
-    request.on("end", () => {
-      const user = JSON.parse(body);
-      // 가자
-
-      users.push({ // (8)
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        password: user.password,
+        const user = JSON.parse(body);
+        users.push({ // (8)
+          id: user.id, 
+          name: user.name,
+          email: user.email,
+          password: user.password,
+        });
+        response.writeHead(200, {"Content-Type" : "application/json"});
+        response.end(JSON.stringify({message: "userCreated"}))
       });
+    }
 
-      response.writeHead(200, {"Content-Type" : "application/json"});
-      response.end(JSON.stringify({message: "userCreated"}))
-    });
-  }
-  // ====================== 회원가입 api end ===========================
+    // =============== 게시물 등록하기 ================
+    if(url === "/posts") {
+      let postBody = "";
+      request.on("data", (data) => {postBody += data})
+      request.on("end", () => {
+      
+        const post = JSON.parse(postBody);
+        const user = users.find((user) => user.id === post.userId)
 
-
-  // ====================== 게시물등록 api ===========================
-  if(url === "/post/registration" && method === "POST") {
-    let postBody = "";
-
-    request.on("data", (data) => {postBody += data})
-
-    request.on("end", () => {
-      const post = JSON.parse(postBody);
-
-      posts.push({
-        id: postBody.id,
-        title: postBody.title,
-        content: postBody.content,
-        userId: postBody.userId,
-      });
+        
+        if(user) {
+          posts.push({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            userId: post.userId,
+          })
 
       response.writeHead(200, {"Content-Type" : "application/json"});
       response.end(JSON.stringify({message : "postCreated"}))
+        } else {
+          response.writeHead(404, {"Content-Type" : "application/json"});
+          response.end(JSON.stringify({message : "user post does not exist!"}))
+        };
     });
+    };
   };
-  // ====================== 게시물등록 api end ===========================
-};
+  // =============== 게시글 부분 수정하기 ================
+  if(method === "PATCH") {
+    const urlArr = url.split("/");
+    const postId = Number(urlArr[urlArr.length-1]);
+
+      let body = "";
+
+      request.on("data", (data) => {body += data})
+      request.on("end", () => {
+        
+        const update = JSON.parse(body)
+
+        for(let post of posts) {
+          if(postId === post.id) {
+            for(let key in update) {
+              post[key] = update[key]
+            }
+          }
+        }
+        response.writeHead(200, {"Content-Type" : "application/json"});
+        response.end(JSON.stringify({message : "postCreated"}))
+      });
+    };
+
+    // =============== 게시글 삭제하기 ================
+    if(method === "DELETE") {
+      const urlArr = url.split("/");
+      const postId = Number(urlArr[urlArr.length-1]);
+
+      for(let postDelete of posts) {
+        if(postId === postDelete.id) {
+          const deleteIndex = posts.indexOf(postDelete)
+          posts.splice(deleteIndex)
+        }
+      }
+      response.writeHead(200, {"Content-Type" : "application/json"})
+      response.end(JSON.stringify({message : "postDelete"}))
+    }
+  };
 
 
 server.on("request", httpRequestListener);
@@ -95,3 +171,6 @@ const PORT = 8000;
 server.listen(PORT, IP, function() {
   console.log(`IP : ${IP} PORT : ${PORT} 서버시작!!!🔥`)
 })
+
+
+
