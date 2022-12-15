@@ -4,8 +4,6 @@ const http = require("http");
 const server = http.createServer();
 
 
-
-
 const users = [
   {
     id: 1,
@@ -32,12 +30,15 @@ const posts = [
     id: 2,
     title: "HTTP, HTML은 도대체 뭘까?",
     content: "말로만 듣던 영어들은 어떻게 인터넷을 실행시킬까",
+    userId: 1,
   }
 ]
 
+// ====================== api ===========================
 const httpRequestListener = (request, response) => {
   const {url, method} = request;
 
+  // ====================== 회원가입 api  ===========================
   if(url === "/user/signup" && method === "POST") {
     let body = "";
 
@@ -57,7 +58,31 @@ const httpRequestListener = (request, response) => {
       response.writeHead(200, {"Content-Type" : "application/json"});
       response.end(JSON.stringify({message: "userCreated"}))
     });
+  }
+  // ====================== 회원가입 api end ===========================
+
+
+  // ====================== 게시물등록 api ===========================
+  if(url === "/post/registration" && method === "POST") {
+    let postBody = "";
+
+    request.on("data", (data) => {postBody += data})
+
+    request.on("end", () => {
+      const post = JSON.parse(postBody);
+
+      posts.push({
+        id: postBody.id,
+        title: postBody.title,
+        content: postBody.content,
+        userId: postBody.userId,
+      });
+
+      response.writeHead(200, {"Content-Type" : "application/json"});
+      response.end(JSON.stringify({message : "postCreated"}))
+    });
   };
+  // ====================== 게시물등록 api end ===========================
 };
 
 
@@ -68,5 +93,5 @@ const PORT = 8000;
 
 
 server.listen(PORT, IP, function() {
-  console.log(`Listening to request on ip ${IP} & port ${PORT}`)
+  console.log(`IP : ${IP} PORT : ${PORT} 서버시작!!!🔥`)
 })
