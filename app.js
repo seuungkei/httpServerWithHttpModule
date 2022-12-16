@@ -121,45 +121,6 @@ const httpRequestListener = (request, response) => {
     });
     };
   };
-  // =============== 게시글 부분 수정하기 ================
-  if(method === "PATCH") {
-    const urlArr = url.split("/");
-    const postId = Number(urlArr[urlArr.length-1]);
-
-      let body = "";
-
-      request.on("data", (data) => {body += data})
-      request.on("end", () => {
-        
-        const update = JSON.parse(body)
-
-        for(let post of posts) {
-          if(postId === post.id) {
-            for(let key in update) {
-              post[key] = update[key]
-            }
-          }
-        }
-        response.writeHead(200, {"Content-Type" : "application/json"});
-        response.end(JSON.stringify({message : "postCreated"}))
-      });
-    };
-
-    // =============== 게시글 삭제하기 ================
-    if(method === "DELETE") {
-      const urlArr = url.split("/");
-      const postId = Number(urlArr[urlArr.length-1]);
-
-      for(let postDelete of posts) {
-        if(postId === postDelete.id) {
-          const deleteIndex = posts.indexOf(postDelete)
-          posts.splice(deleteIndex)
-        }
-      }
-      response.writeHead(200, {"Content-Type" : "application/json"})
-      response.end(JSON.stringify({message : "postDelete"}))
-    }
-  };
 
 
 server.on("request", httpRequestListener);
