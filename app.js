@@ -144,21 +144,6 @@ const httpRequestListener = (request, response) => {
         response.end(JSON.stringify({message : "postCreated"}))
       });
     };
-
-    // =============== 게시글 삭제하기 ================
-    if(method === "DELETE") {
-      const urlArr = url.split("/");
-      const postId = Number(urlArr[urlArr.length-1]);
-
-      for(let postDelete of posts) {
-        if(postId === postDelete.id) {
-          const deleteIndex = posts.indexOf(postDelete)
-          posts.splice(deleteIndex)
-        }
-      }
-      response.writeHead(200, {"Content-Type" : "application/json"})
-      response.end(JSON.stringify({message : "postDelete"}))
-    }
   };
 
 
