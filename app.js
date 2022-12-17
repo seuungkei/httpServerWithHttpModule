@@ -26,13 +26,19 @@ const posts = [
     id: 1,
     title: "비전공자 개발자 시작하기",
     content: "늦은 나이에 시작한 비전공자의 개발자 도전기",
-    userId: 1,
+    userId: 2,
   },
   {
     id: 2,
     title: "HTTP, HTML은 도대체 뭘까?",
     content: "말로만 듣던 영어들은 어떻게 인터넷을 실행시킬까",
-    userId: 1,
+    userId: 2,
+  },
+  {
+    id: 3,
+    title: "HTTP, HTML은 도대체 뭘까123123",
+    content: "말로만 듣던 영어들은 어떻게 인터넷을 실행시킬까123123",
+    userId: 2,
   }
 ]
 
@@ -58,15 +64,12 @@ function getPostsList(users, posts) {
 };
 
 
-// =============== 게시글 목록 조회하기 함수 ================
-
-
 
 const httpRequestListener = (request, response) => {
   const {url, method} = request;
 
   // =============== 유저와 게시글 목록 조회하기 ================
-  if (method === "GET") {
+  if(method === "GET"){
     if (url === "/posts") {
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(JSON.stringify({ data: posts }));
@@ -74,7 +77,7 @@ const httpRequestListener = (request, response) => {
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(JSON.stringify({ data: getPostsList(users, posts) }));
     }
-  } 
+  }
 // =============== 유저 회원가입 ================
   if(method === "POST") {
     if(url === "/user/signup"){
@@ -82,6 +85,7 @@ const httpRequestListener = (request, response) => {
       request.on("data", (data) => {body += data})
       request.on("end", () => {
 
+        
         const user = JSON.parse(body);
         users.push({ // (8)
           id: user.id, 
@@ -145,8 +149,23 @@ const httpRequestListener = (request, response) => {
         response.end(JSON.stringify({message : "postCreated"}))
       });
     };
-  };
 
+    // =============== 게시글 삭제하기 ================
+      if(method === "DELETE") {
+        const urlArr = url.split("/");
+        const postId = Number(urlArr[urlArr.length-1]);
+  
+        for(let postDelete of posts) {
+          if(postId === postDelete.id) {
+            const deleteIndex = posts.indexOf(postDelete)
+            posts.splice(deleteIndex)
+          }
+        }
+        response.writeHead(200, {"Content-Type" : "application/json"})
+        response.end(JSON.stringify({message : "postDelete"}))
+      }
+      // =============== 사용자 등록 게시물 확인하기 ================
+    }
 
 server.on("request", httpRequestListener);
 
