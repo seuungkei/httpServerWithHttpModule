@@ -70,6 +70,30 @@ const httpRequestListener = (request, response) => {
 
   // =============== 유저와 게시글 목록 조회하기 ================
   if(method === "GET"){
+    const urlArr = url.split("/")
+    const userId = Number(urlArr[urlArr.length-1])
+    let userList = {};
+
+    for(let user of users) {
+      if(userId === user.id) {
+        userList.userID = user.id
+        userList.userName = user.name
+        userList.postings = []
+        for(let post of posts) {
+          let obj = {}
+          if(userId === post.userId) {
+            obj.postingId = post.id;
+            obj.postingTitle = post.title;
+            obj.postingContent = post.content; 
+            userList["postings"].push(obj)
+          }
+        }
+      }
+    }
+    response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ data: userList }));
+
+    
     if (url === "/posts") {
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end(JSON.stringify({ data: posts }));
@@ -85,7 +109,7 @@ const httpRequestListener = (request, response) => {
       request.on("data", (data) => {body += data})
       request.on("end", () => {
 
-        
+
         const user = JSON.parse(body);
         users.push({ // (8)
           id: user.id, 
